@@ -16,6 +16,7 @@ MANDIR=$(PREFIX)/share/man
 EXECUTABLE_EXTENSION=
 PKG_CONFIG=$(CROSS)pkg-config
 OBJECTS=pqiv.o lib/strnatcmp.o lib/bostree.o lib/filebuffer.o lib/config_parser.o lib/thumbnailcache.o
+MACOS_OBJECTS=
 HEADERS=pqiv.h lib/bostree.h lib/filebuffer.h lib/strnatcmp.h
 BACKENDS=gdkpixbuf
 EXTRA_DEFS=
@@ -43,6 +44,11 @@ endif
 # First things first: Require at least one backend
 ifeq ($(BACKENDS),)
 $(error Building pqiv without any backends is unsupported.)
+endif
+
+ifeq ($(shell uname -s),Darwin)
+	MACOS_OBJECTS=macos/foreground.o
+	HEADERS+=macos/foreground.h
 endif
 
 # pkg-config lines for the main program
@@ -167,7 +173,12 @@ all: pqiv$(EXECUTABLE_EXTENSION) pqiv.desktop $(SHARED_OBJECTS)
 .PHONY: get_libs get_available_backends _build_variables clean distclean install uninstall all
 .SECONDARY:
 
-pqiv$(EXECUTABLE_EXTENSION): $(OBJECTS)
+ifeq ($(shell uname -s),Darwin)
+macos/foreground.o: macos/foreground.m
+	$(SILENT_CC) $(CROSS)$(CC) $(CPPFLAGS) -c -o macos/foreground.o macos/foreground.m
+endif
+
+pqiv$(EXECUTABLE_EXTENSION): $(OBJECTS) $(MACOS_OBJECTS)
 	$(SILENT_CCLD) $(CROSS)$(CC) $(CPPFLAGS) $(EXTRA_CFLAGS_BINARY) -o $@ $+ $(LDLIBS_REAL) $(LDFLAGS_REAL) $(EXTRA_LDFLAGS_BINARY)
 
 ifeq ($(BACKENDS_BUILD), shared)
@@ -271,7 +282,7 @@ pqiv.app.tmp/Contents/Info.plist: $(HEADERS)
 	) > $@
 
 clean:
-	rm -f pqiv$(EXECUTABLE_EXTENSION) *.o backends/*.o backends/*.so lib/*.o backends/initializer-*.c pqiv.desktop
+	rm -f pqiv$(EXECUTABLE_EXTENSION) *.o backends/*.o backends/*.so lib/*.o backends/initializer-*.c macos/*.o pqiv.desktop
 
 distclean: clean
 	rm -f config.make
