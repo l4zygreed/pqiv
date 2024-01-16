@@ -36,6 +36,10 @@
 #include <assert.h>
 #include <locale.h>
 
+#ifdef __APPLE__
+	#include "macos/foreground.h"
+#endif
+
 #ifdef _WIN32
 	#ifndef _WIN32_WINNT
 		#define _WIN32_WINNT 0x500
@@ -7426,6 +7430,10 @@ void create_window() { /*{{{*/
 	if(option_transparent_background) {
 		window_screen_activate_rgba();
 	}
+
+#ifdef __APPLE__
+	macos_force_foreground_level();
+#endif
 }/*}}}*/
 gboolean initialize_gui() {/*{{{*/
 	setup_checkerboard_pattern();
