@@ -6749,12 +6749,24 @@ gboolean window_configure_callback(GtkWidget *widget, GdkEventConfigure *event, 
 
 		// Update window size
 		if(main_window_in_fullscreen) {
-			main_window_width = screen_geometry.width;
-			main_window_height = screen_geometry.height;
+			if (application_mode == DEFAULT) {
+				main_window_width = screen_geometry.width;
+				main_window_height = screen_geometry.height;
+			}
+			else {
+				main_window_width = screen_geometry.width / 2;
+				main_window_height = screen_geometry.height /2;
+			}
 		}
 		else {
-			main_window_width = event->width - csd_width;
-			main_window_height = event->height - csd_height;
+			if (application_mode == DEFAULT) {
+				main_window_width = event->width - csd_width;
+				main_window_height = event->height - csd_height;
+			}
+			else {
+				main_window_width = (event->width - csd_width) / 2;
+				main_window_height = (event->height - csd_height) /2;
+			}
 		}
 
 		// If the fullscreen state just changed execute the post-change callbacks here
